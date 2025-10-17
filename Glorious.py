@@ -1,4 +1,4 @@
-# Glorious.py (English Comments)
+# Glorious.py
 
 # Required libraries
 import hid
@@ -14,8 +14,10 @@ from pystray import MenuItem as item, Icon
 from winotify import Notification
 
 # --- SETTINGS ---
-VENDOR_ID = 0x093a
-PRODUCT_ID = 0x821d
+
+# Vendor ID and Product ID for the Glorious mouse
+VENDOR_ID = 0x093a # Glorious Vendor ID (Enter your own Vendor ID here)
+PRODUCT_ID = 0x821d # Glorious Product ID (Enter your own Product ID here)
 TARGET_USAGE_PAGE = 65280 
 QUERY_REPORT_ID = 3
 QUERY_REPORT_LENGTH = 64
@@ -25,9 +27,9 @@ QUERY_PAYLOAD = bytes.fromhex(
     "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 "
     "00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
 )
-QUERY_INTERVAL_SECONDS = 60
-RECONNECT_DELAY_SECONDS = 15
-LOW_BATTERY_THRESHOLD = 20
+QUERY_INTERVAL_SECONDS = 60 # Interval for the query (You can change this to your own interval)
+RECONNECT_DELAY_SECONDS = 15 # Delay for the reconnect (You can change this to your own delay)
+LOW_BATTERY_THRESHOLD = 20 # Threshold for the low battery (You can change this to your own threshold)
 
 
 class GloriousBatteryTrayApp:
