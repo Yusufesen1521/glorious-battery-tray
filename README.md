@@ -15,19 +15,7 @@ A lightweight, standalone Windows system tray application to display the real-ti
 -   **Auto-Reconnect**: Automatically tries to reconnect if the mouse is turned off or goes to sleep.
 -   **No External Software Needed**: Doesn't require Glorious Core to be running.
 
-## Easy Installation (Recommended)
-
-For most users, installing the standalone `.exe` is the easiest method.
-
-1.  Go to the [**Releases Page**](https://github.com/YOUR_USERNAME/glorious-battery-tray/releases).
-    *(Note: Replace `YOUR_USERNAME` with your actual GitHub username)*
-2.  Download the `Glorious.exe` file from the latest release.
-3.  Move the downloaded `Glorious.exe` to a permanent folder on your computer (e.g., create a folder in `C:\Program Files\GloriousBatteryTray`).
-4.  Double-click `Glorious.exe` to run the application. The battery icon will appear in your system tray.
-
-## Installation from Source (For Developers)
-
-This method is for users who want to run the script directly using Python.
+## Installation
 
 ### Prerequisites
 
@@ -41,7 +29,7 @@ This method is for users who want to run the script directly using Python.
     git clone [https://github.com/YOUR_USERNAME/glorious-battery-tray.git](https://github.com/YOUR_USERNAME/glorious-battery-tray.git)
     cd glorious-battery-tray
     ```
-    (Alternatively, you can download the project as a ZIP file and extract it.)
+    (You can also download the project as a ZIP file and extract it.)
 
 2.  **Install the required libraries:**
     Open a terminal or Command Prompt in the project folder and run:
@@ -49,10 +37,39 @@ This method is for users who want to run the script directly using Python.
     pip install -r requirements.txt
     ```
 
-3.  **Run the script:**
+## Usage
+
+You can either run the application directly as a Python script or compile it into a standalone `.exe` file for easier use.
+
+### Method 1: Running as a Script
+
+In your terminal, simply run the following command:
+
+```sh
+python Glorious.py
+```
+The battery icon will appear in your system tray.
+
+### Method 2: Creating a Standalone `.exe` File
+
+This method packages the application into a single executable file, so you don't need to run it from a terminal every time.
+
+1.  **Install PyInstaller:**
+    If you don't have it installed, run this command:
     ```sh
-    python Glorious.py
+    pip install pyinstaller
     ```
+
+2.  **Build the Executable:**
+    In the project's root directory, run the following command. An icon file named `app.ico` is recommended to be in the same folder for a custom icon.
+    ```sh
+    pyinstaller --onefile --windowed --icon="app.ico" Glorious.py
+    ```
+    -   `--onefile`: Bundles everything into a single `.exe`.
+    -   `--windowed`: Prevents a command prompt window from opening when you run the app.
+
+3.  **Run the App:**
+    The finished `Glorious.exe` will be in a new folder called `dist`. You can move this file anywhere on your computer (e.g., to your Desktop or a folder in `Program Files`) and double-click it to start.
 
 ## Running on Startup (Optional)
 
@@ -61,23 +78,8 @@ To make the application run automatically when you start your computer:
 1.  Press `Win + R` to open the Run dialog.
 2.  Type `shell:startup` and press Enter. This will open the Startup folder.
 3.  Create a shortcut to the application in this folder.
-    -   **For the .exe version**: Right-click and drag your `Glorious.exe` file into the Startup folder and select "Create shortcuts here".
-    -   **For the script version**: Right-click inside the Startup folder, go to `New > Shortcut`. In the "location" field, enter `pythonw.exe "C:\path\to\your\Glorious.py"`. Using `pythonw.exe` will prevent a console window from appearing.
-
-## Creating the Executable (For Contributors)
-
-To create a standalone `.exe` from the source code, you'll need `pyinstaller`.
-
-1.  **Install PyInstaller:**
-    ```sh
-    pip install pyinstaller
-    ```
-2.  **Build the .exe:**
-    Run the following command in the project's root directory. An icon file named `app.ico` is recommended.
-    ```sh
-    pyinstaller --onefile --windowed --icon="app.ico" Glorious.py
-    ```
-3.  The final `Glorious.exe` will be located in the `dist` folder.
+    -   **For the `.exe` version**: Right-click and drag the `Glorious.exe` file you created into the Startup folder and select "Create shortcuts here".
+    -   **For the script version**: Right-click inside the Startup folder, go to `New > Shortcut`. In the "location" field, enter `pythonw.exe "C:\path\to\your\Glorious.py"`. Using `pythonw.exe` is important as it prevents a console window from appearing.
 
 ## Troubleshooting
 
