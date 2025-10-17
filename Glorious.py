@@ -1,17 +1,19 @@
-# Gerekli kütüphaneler (queue eklendi)
+# Glorious.py (English Comments)
+
+# Required libraries
 import hid
 import time
 import sys
 import os
 import logging
-import queue # Hata yakalama için eklendi
+import queue
 from queue import Queue
 from threading import Thread, Event
 from PIL import Image, ImageDraw, ImageFont
 from pystray import MenuItem as item, Icon
 from winotify import Notification
 
-# --- AYARLAR (Değişiklik Yok) ---
+# --- SETTINGS ---
 VENDOR_ID = 0x093a
 PRODUCT_ID = 0x821d
 TARGET_USAGE_PAGE = 65280 
@@ -48,11 +50,10 @@ class GloriousBatteryTrayApp:
                 logging.StreamHandler(sys.stdout)
             ]
         )
-        logging.info("Sistem Tepsisi Uygulaması Başlatılıyor (DEBUG MODU)...")
+        logging.info("Starting System Tray Application...")
 
     def _create_icon_image(self, level_text: str):
-        # --- DEBUG EKLENTİSİ ---
-        logging.info(f"İkon oluşturma fonksiyonu çağrıldı. Değer: '{level_text}'")
+        logging.info(f"Icon creation function called. Value: '{level_text}'")
         image = None
         try:
             width, height = 64, 64
@@ -60,11 +61,11 @@ class GloriousBatteryTrayApp:
             draw = ImageDraw.Draw(image)
             try:
                 font = ImageFont.truetype("arial.ttf", 40)
-                logging.info("Arial fontu başarıyla yüklendi.")
+                logging.info("Arial font loaded successfully.")
             except IOError:
-                logging.warning("Arial fontu bulunamadı, varsayılan font deneniyor...")
+                logging.warning("Arial font not found, attempting to load default font...")
                 font = ImageFont.load_default()
-                logging.info("Varsayılan font yüklendi.")
+                logging.info("Default font loaded.")
             
             text_bbox = draw.textbbox((0, 0), level_text, font=font)
             text_width, text_height = text_bbox[2] - text_bbox[0], text_bbox[3] - text_bbox[1]
@@ -73,26 +74,25 @@ class GloriousBatteryTrayApp:
             try:
                 level_int = int(level_text)
                 if level_int <= LOW_BATTERY_THRESHOLD: color = "red"
-                elif level_int > 75: color = "#66ff66"
+                elif level_int > 75: color = "#66ff66" # A light green color
             except (ValueError, TypeError):
                 if level_text in ["X", "!"]: color = "red"
             draw.text(position, level_text, font=font, fill=color)
-            logging.info(f"'{level_text}' için ikon resmi başarıyla oluşturuldu.")
+            logging.info(f"Icon image successfully created for '{level_text}'.")
         except Exception as e:
-            logging.error(f"!!! İKON OLUŞTURMA HATASI: {e}", exc_info=True)
+            logging.error(f"!!! ICON CREATION ERROR: {e}", exc_info=True)
         return image
 
-    # _find_device ve _battery_worker fonksiyonları aynı kalabilir, onlarda sorun yok.
     def _find_device(self):
-        logging.info("Uyumlu cihaz aranıyor...")
+        logging.info("Searching for compatible device...")
         for dev in hid.enumerate():
             if (dev['vendor_id'] == VENDOR_ID and
                 dev['product_id'] == PRODUCT_ID and
                 dev['usage_page'] == TARGET_USAGE_PAGE):
                 self.device_path = dev['path']
-                logging.info(f"Cihaz bulundu: {self.device_path}")
+                logging.info(f"Device found: {self.device_path}")
                 return True
-        logging.error("Cihaz bulunamadı.")
+        logging.error("Device not found.")
         return False
 
     def _battery_worker(self):
@@ -100,82 +100,86 @@ class GloriousBatteryTrayApp:
         while not self.stop_event.is_set():
             try:
                 if not device:
-                    logging.info("Cihaza bağlanılıyor...")
+                    logging.info("Connecting to device...")
                     self.ui_queue.put(('status', '...'))
                     device = hid.device()
                     device.open_path(self.device_path)
-                    logging.info("Bağlantı başarılı.")
+                    logging.info("Connection successful.")
+                
                 device.send_feature_report(QUERY_PAYLOAD)
                 time.sleep(0.05)
                 resp = device.get_feature_report(QUERY_REPORT_ID, QUERY_REPORT_LENGTH)
+                
                 if resp and len(resp) >= 4:
                     battery_level = resp[3]
                     if 0 <= battery_level <= 100:
-                        logging.info(f"Pil seviyesi okundu: %{battery_level}")
+                        logging.info(f"Battery level read: {battery_level}%")
                         self.ui_queue.put(('level', battery_level))
-                    else: logging.warning(f"Geçersiz pil değeri: {battery_level}")
-                else: logging.warning("Cihazdan boş veya geçersiz rapor alındı.")
+                    else: 
+                        logging.warning(f"Invalid battery value from device: {battery_level}")
+                else: 
+                    logging.warning("Received empty or invalid report from device.")
+                
                 self.stop_event.wait(QUERY_INTERVAL_SECONDS)
+
             except (OSError, IOError, ValueError) as e:
-                logging.error(f"HID Hatası: {e}. Tekrar denenecek...")
+                logging.error(f"HID Error: {e}. Retrying...", exc_info=False)
                 self.ui_queue.put(('status', 'X'))
-                if device: device.close()
+                if device: 
+                    device.close()
                 device = None
                 self.stop_event.wait(RECONNECT_DELAY_SECONDS)
-        if device: device.close()
-        logging.info("Pil sorgulama durduruldu.")
+        
+        if device: 
+            device.close()
+        logging.info("Battery polling thread stopped.")
     
     def _ui_updater(self):
-        logging.info("UI Güncelleyici thread'i başlatıldı.")
+        logging.info("UI Updater thread started.")
         while not self.stop_event.is_set():
             try:
                 msg_type, value = self.ui_queue.get(timeout=2)
                 
-                logging.info(f"UI kuyruğundan mesaj alındı: {msg_type}, {value}")
+                logging.info(f"Message received from UI queue: {msg_type}, {value}")
                 
-                # --- DEBUG EKLENTİSİ ---
-                # İkonu güncelleme işlemini de try-except içine alıyoruz.
                 try:
                     if msg_type == 'level':
                         level = value
                         self.icon.icon = self._create_icon_image(str(level))
-                        self.icon.title = f"Glorious Pil: %{level}"
-                        # ... (Bildirim mantığı aynı)
+                        self.icon.title = f"Glorious Battery: {level}%"
                     elif msg_type == 'status':
                         status_text = value
                         self.icon.icon = self._create_icon_image(status_text)
-                        self.icon.title = f"Glorious Pil: {status_text}"
+                        self.icon.title = f"Glorious Battery: {status_text}"
                 except Exception as e:
-                    logging.error(f"!!! İKON GÜNCELLEME HATASI: {e}", exc_info=True)
+                    logging.error(f"!!! ICON UPDATE ERROR: {e}", exc_info=True)
 
-            # --- DEBUG EKLENTİSİ ---
-            # Sadece kuyruk boş hatasını sessizce geç, diğer tüm hataları logla.
             except queue.Empty:
+                # This is normal when there are no updates, just continue.
                 pass 
             except Exception as e:
-                logging.error(f"!!! UI THREAD HATASI: {e}", exc_info=True)
+                logging.error(f"!!! UI THREAD ERROR: {e}", exc_info=True)
 
-        logging.info("UI güncelleme durduruldu.")
+        logging.info("UI update thread stopped.")
 
     def _quit_action(self):
-        logging.info("Çıkış yapılıyor...")
+        logging.info("Quit action initiated...")
         self.stop_event.set()
         self.icon.stop()
 
     def run(self):
         if not self._find_device():
-            Notification(app_id="Glorious Pil Takip", title="Hata",
-                         msg="Uyumlu Glorious fare bulunamadı. Lütfen bağlı olduğundan emin olun.").show()
+            Notification(app_id="Glorious Battery Monitor", title="Error",
+                         msg="Compatible Glorious mouse not found. Please ensure it's connected.").show()
             sys.exit(1)
 
-        menu = (item('Çıkış', self._quit_action),)
+        menu = (item('Quit', self._quit_action),)
         try:
             initial_icon = self._create_icon_image('...')
-            self.icon = Icon("GloriousPil", initial_icon, "Glorious Pil: Başlatılıyor...", menu)
+            self.icon = Icon("GloriousBattery", initial_icon, "Glorious Battery: Starting...", menu)
             
-            # --- DÜZELTME BURADA ---
             def setup(icon):
-                # Bu satır, ikonun sistem tepsisinde görünmesini garanti eder.
+                # This ensures the icon is visible in the tray before starting the threads.
                 icon.visible = True
                 Thread(target=self._battery_worker, name="BatteryWorker", daemon=True).start()
                 Thread(target=self._ui_updater, name="UIUpdater", daemon=True).start()
@@ -183,11 +187,11 @@ class GloriousBatteryTrayApp:
             self.icon.run(setup=setup)
             
         except Exception as e:
-            logging.error(f"!!! UYGULAMA BAŞLATMA HATASI: {e}", exc_info=True)
-            Notification(app_id="Glorious Pil Takip", title="Kritik Hata",
-                         msg=f"Uygulama başlatılamadı. Detaylar için log dosyasını kontrol edin.\nHata: {e}").show()
+            logging.error(f"!!! APPLICATION STARTUP ERROR: {e}", exc_info=True)
+            Notification(app_id="Glorious Battery Monitor", title="Critical Error",
+                         msg=f"Application failed to start. Check the log file for details.\nError: {e}").show()
 
-        logging.info("Uygulama kapatıldı.")
+        logging.info("Application closed.")
 
 
 if __name__ == "__main__":
