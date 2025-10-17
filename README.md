@@ -2,7 +2,6 @@
 
 A lightweight, standalone Windows system tray application to display the real-time battery level of your Glorious Model I2 Wireless mouse.
 
-![screenshot](https://i.imgur.com/r6H5yYy.png) ## Features
 
 -   **Real-Time Monitoring**: See your mouse's battery percentage directly in your system tray.
 -   **Dynamic Icon**: The tray icon is a number that updates automatically.
